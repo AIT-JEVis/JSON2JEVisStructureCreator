@@ -1,0 +1,147 @@
+{
+    "id": "-1",
+    "name": "Organization Directory",
+    "jevisclass": "Organization Directory",
+    "attributes": [],
+    "children": [
+        {
+            "id": "-2",
+            "name": "Desigio",
+            "jevisclass": "Organization",
+            "attributes": [
+                {
+                    "name": "Address",
+                    "lastvalue": "Some Random Adress"
+                },
+                {
+                    "name": "Members",
+                    "lastvalue": "Me"
+                }
+            ],
+            "children": [
+                {
+                    "name": "Monitored Object Directory",
+                    "jevisclass": "Monitored Object Directory",
+                    "attributes": [],
+                    "children": [
+                        {
+                            "name": "Building",
+                            "jevisclass": "Building",
+                            "attributes": [],
+                            "children": [
+                                {
+                                    "name": "Data Directory",
+                                    "jevisclass": "Data Directory",
+                                    "attributes": [],
+                                    "children": [
+                                        {
+                                            "id": "1",
+                                            "name": "Data1",
+                                            "jevisclass": "Data"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "Data Source Directory",
+                                    "jevisclass": "Data Source Directory",
+                                    "attributes": [],
+                                    "children": [
+                                        {
+                                            "name": "MySQL Server",
+                                            "jevisclass": "MySQL Server",
+                                            "attributes": [
+                                                {
+                                                    "name": "Host",
+                                                    "lastvalue": "localhost"
+                                                },
+                                                {
+                                                    "name": "Port",
+                                                    "lastvalue": "3306"
+                                                },
+                                                {
+                                                    "name": "Schema",
+                                                    "lastvalue": "jevis"
+                                                },
+                                                {
+                                                    "name": "User",
+                                                    "lastvalue": "jevis"
+                                                },
+                                                {
+                                                    "name": "Password",
+                                                    "lastvalue": "jevistest"
+                                                },
+                                                {
+                                                    "name": "Enabled",
+                                                    "lastvalue": "true"
+                                                }
+                                            ],
+                                            "children": [
+                                                {
+                                                    "name": "SQL Channel Directory",
+                                                    "jevisclass": "SQL Channel Directory",
+                                                    "attributes": [],
+                                                    "children": [
+                                                        {
+                                                            "name": "SQL Channel",
+                                                            "jevisclass": "SQL Channel",
+                                                            "attributes": [
+                                                                {
+                                                                    "name": "Table",
+                                                                    "lastvalue": ""
+                                                                },
+                                                                {
+                                                                    "name": "Column ID",
+                                                                    "lastvalue": ""
+                                                                },
+                                                                {
+                                                                    "name": "Column Value",
+                                                                    "lastvalue": ""
+                                                                },
+                                                                {
+                                                                    "name": "Column Timestamp",
+                                                                    "lastvalue": ""
+                                                                },
+                                                                {
+                                                                    "name": "Timestamp Format",
+                                                                    "lastvalue": ""
+                                                                }
+                                                            ],
+                                                            "children": [
+                                                                {
+                                                                    "name": "SQL Data Point Directory",
+                                                                    "jevisclass": "SQL Data Point Directory",
+                                                                    "attributes": [],
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "SQL Data Point",
+                                                                            "jevisclass": "SQL Data Point",
+                                                                            "attributes": [
+                                                                                {
+                                                                                    "name": "ID",
+                                                                                    "lastvalue": ""
+                                                                                },
+                                                                                {
+                                                                                    "name": "Target",
+                                                                                    "lastvalue": "$(REF)1"
+                                                                                }
+                                                                            ],
+                                                                            "children": []
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
