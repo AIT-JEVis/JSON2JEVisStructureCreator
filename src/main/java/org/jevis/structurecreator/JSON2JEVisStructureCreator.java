@@ -21,6 +21,7 @@ package org.jevis.structurecreator;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -32,9 +33,12 @@ import org.jevis.api.JEVisAttribute;
 import org.jevis.api.JEVisClass;
 import org.jevis.api.JEVisDataSource;
 import org.jevis.api.JEVisException;
+import org.jevis.api.JEVisFile;
 import org.jevis.api.JEVisObject;
 import org.jevis.api.JEVisSample;
 import org.jevis.api.sql.JEVisDataSourceSQL;
+import org.jevis.commons.JEVisFileImp;
+import org.jevis.commons.driver.DataCollectorTypes;
 import org.jevis.commons.json.JsonAttribute;
 import org.jevis.commons.json.JsonObject;
 
@@ -48,6 +52,7 @@ public class JSON2JEVisStructureCreator {
         // UPDATE_EXISTING
     }
     private static final String REFERENCE_MARKER = "$(REF)";
+    private static final String FILE_MARKER = "$(FILE)";
     /**
      * The JEVisDataSource is the central class handling the connection to the
      * JEVis Server
@@ -55,6 +60,7 @@ public class JSON2JEVisStructureCreator {
     private static JEVisDataSource _jevis_ds;
     
     private HashMap<Long,Long> _mappedIDs;
+    private String _jsonFile;
     
      /**
      * Example how to use WiotechStructureCreator
@@ -65,7 +71,8 @@ public class JSON2JEVisStructureCreator {
         JSON2JEVisStructureCreator wsc = new JSON2JEVisStructureCreator();
         wsc.connectToJEVis("localhost", "3306", "jevis", "jevis", "jevistest", "Sys Admin", "jevis");
         try {
-            wsc.createStructure();
+            //wsc.processJSONFile("DesigioStructure.json");
+            wsc.processJSONFile("../JEDrivers/MySQL-Driver/MySQLDriverObjects.json");
         } catch (JEVisException ex) {
             Logger.getLogger(JSON2JEVisStructureCreator.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
@@ -82,9 +89,11 @@ public class JSON2JEVisStructureCreator {
      * Creates the needed JEVis structure
      * 
      */
-    public void createStructure() throws JEVisException, IOException{
+    public void processJSONFile(String jsonFile) throws JEVisException, IOException {
+        _jsonFile = jsonFile;
+        
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        String input = new String(Files.readAllBytes(Paths.get("DesigioStructure.json")), StandardCharsets.UTF_8);
+        String input = new String(Files.readAllBytes(Paths.get(jsonFile)), StandardCharsets.UTF_8);
         
         JsonObject root = gson.fromJson(input, JsonObject.class);
         System.out.println(root.getId() + ":" + root.getName() + ":" + root.getJevisClass());
@@ -204,6 +213,7 @@ public class JSON2JEVisStructureCreator {
         for (JsonAttribute att : jsonObject.getAttributes()) {
             String key = att.getName();
             String value = att.getLastvalue();
+            Object uploadValue = value;
             System.out.println(String.format(
                 "\tProcess Attribute: key/value: '%s/%s'",
                         key, value));
@@ -215,9 +225,41 @@ public class JSON2JEVisStructureCreator {
                 String refIDStr = value.substring(REFERENCE_MARKER.length());
                 long refID = Long.valueOf(refIDStr);
                 //TODO: check if reference ID was set
-                value = "" + _mappedIDs.get(refID);
+                uploadValue = "" + _mappedIDs.get(refID);
+            } else if (value.startsWith(FILE_MARKER)) {
+                try {
+                    String fileName = value.substring(FILE_MARKER.length());
+                    
+                    // Get relative path from json-file
+                    int indexSeperator = _jsonFile.lastIndexOf(File.separator);
+                    String filePath;
+                    if (indexSeperator >= 0) {
+                        filePath = _jsonFile.
+                            substring(0,_jsonFile.lastIndexOf(File.separator));
+                    } else {
+                        filePath = "";
+                    }
+                    
+                    if (!filePath.isEmpty()) {
+                        fileName = filePath + File.separator + fileName;
+                    }
+                    
+                    // Read file to upload
+                    File file = new File(fileName);
+                    JEVisFile jfile = new JEVisFileImp(file.getName(), file);
+                    
+                    uploadValue = jfile;
+                } catch (IOException ex) {
+                    Logger.getLogger(JSON2JEVisStructureCreator.class.getName()).log(Level.SEVERE, null, ex);
+                    break;
+                }
+                
             }
-            writeToJEVis(newObject.getID(), key, value);
+            if (uploadValue == null) {
+                System.out.println("\t No value specified, not writing new Attribute");
+                continue;
+            }
+            writeToJEVis(newObject.getID(), key, uploadValue);
         }
         
         // Create children from JSON
