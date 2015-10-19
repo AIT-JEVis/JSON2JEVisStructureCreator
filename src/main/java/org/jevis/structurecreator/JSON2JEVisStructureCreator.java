@@ -47,8 +47,10 @@ public class JSON2JEVisStructureCreator {
     
     private interface ID_COMMANDS {
         final long IGNORE = -1;
-        final long RECREATE = -2;
-        // UPDATE_EXISTING
+        final long CREATE = 0; // or update
+        final long DELETE = -2;
+        final long DELETE_RECURSIVE = -3;
+        final long RENAME = -4;
     }
     private static final String REFERENCE_MARKER = "$(REF)";
     private static final String FILE_MARKER = "$(FILE)";
@@ -191,7 +193,7 @@ public class JSON2JEVisStructureCreator {
         
         // Object already exists
         if (newObject != null) {
-            if (id == ID_COMMANDS.RECREATE) {
+            if (id == ID_COMMANDS.DELETE) {
                 System.out.println("\tDelete JEVis-Object");
                 // delete object
                 newObject.delete();
