@@ -47,7 +47,7 @@ public class JSON2JEVisStructureCreator {
     
     private interface ID_COMMANDS {
         final long IGNORE = -1;
-        final long DELETE_EXISTING = -2;
+        final long RECREATE = -2;
         // UPDATE_EXISTING
     }
     private static final String REFERENCE_MARKER = "$(REF)";
@@ -191,7 +191,7 @@ public class JSON2JEVisStructureCreator {
         
         // Object already exists
         if (newObject != null) {
-            if (id == ID_COMMANDS.DELETE_EXISTING) {
+            if (id == ID_COMMANDS.RECREATE) {
                 System.out.println("\tDelete JEVis-Object");
                 // delete object
                 newObject.delete();
