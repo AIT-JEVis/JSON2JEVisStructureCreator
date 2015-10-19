@@ -36,6 +36,7 @@ import org.jevis.api.JEVisException;
 import org.jevis.api.JEVisFile;
 import org.jevis.api.JEVisObject;
 import org.jevis.api.JEVisSample;
+import org.jevis.api.JEVisType;
 import org.jevis.api.sql.JEVisDataSourceSQL;
 import org.jevis.commons.JEVisFileImp;
 import org.jevis.commons.json.JsonAttribute;
@@ -45,9 +46,9 @@ import org.jevis.commons.json.JsonObject;
 public class JSON2JEVisStructureCreator {
 
     
-    private interface ID_COMMANDS {
-        final long IGNORE = -1;
+    private interface OPERATIONS {
         final long CREATE = 0; // or update
+        final long IGNORE = -1;
         final long DELETE = -2;
         final long DELETE_RECURSIVE = -3;
         final long RENAME = -4;
@@ -80,6 +81,8 @@ public class JSON2JEVisStructureCreator {
                 }
             } else { // use defaults
                 wsc.processJSONFile("DesigioStructure.json");
+                //wsc.processJSONFile("delete_all_organizations.json");
+                //wsc.processJSONFile("delete_all_languages.json");
                 //wsc.processJSONFile("../JEDrivers/MySQL-Driver/MySQLDriverObjects.json");
             }
         } catch (JEVisException ex) {
@@ -169,113 +172,141 @@ public class JSON2JEVisStructureCreator {
             System.out.println("Error: jsonObject should not be null");
             return null;
         }
-        long id = jsonObject.getId();
+        long op = jsonObject.getId();
         String name = jsonObject.getName();
         String jevisClass = jsonObject.getJevisClass();
         
         System.out.println(String.format(
         "JSON-Processing: id/name/jevisClass: '%d/%s/%s'",
-                id, name, jevisClass));
-        
+                op, name, jevisClass));
         
         // Check if object exists
-        JEVisObject newObject = null;
+        JEVisObject jevisObject = null;
         for (JEVisObject child : parent.getChildren()) {
             System.out.println(String.format(
                 "\tComparing to: id/name/jevisClass: '%d/%s/%s'",
                         child.getID(), child.getName(), child.getJEVisClass().getName()));
-            if (child.getName().equals(name) && child.getJEVisClass().getName().equals(jevisClass)) {
+            
+            boolean matching_name = true;
+            boolean matching_class = true;
+            if (name != null && !name.isEmpty()) {
+                matching_name = child.getName().equals(name);
+            }
+            if (jevisClass != null && !jevisClass.isEmpty()) {
+                matching_class = child.getJEVisClass().getName().equals(jevisClass);
+            }
+            
+            if (matching_name && matching_class) {
                 System.out.println("\t Found match");
-                newObject = child;
+                jevisObject = child;
                 break;
             }
         }
         
-        // Object already exists
-        if (newObject != null) {
-            if (id == ID_COMMANDS.DELETE) {
-                System.out.println("\tDelete JEVis-Object");
-                // delete object
-                newObject.delete();
-                newObject.commit();
-                newObject = null;
-            } else {
-                System.out.println("\tUpdate JEVis-Object");
-            }
-        }
-        
-        // New object or object was deleted, create new
-        if (newObject == null) {
-            System.out.println("\tCreate JEVis-Object");
-            
-            newObject = createObject(parent.getID(), jevisClass, name);
-            System.out.println(newObject.getName());
-        }
-        
-        // IDs > 0 are treated as reference IDs and can be used by '$(REF)<ID>'
-        if (id > 0) {
-            //TODO: what to do if ref-id already set?
-            _mappedIDs.put(id, newObject.getID());
-        }
-        
-        // Set/Update attributes
-        for (JsonAttribute att : jsonObject.getAttributes()) {
-            String key = att.getName();
-            String value = att.getLastvalue();
-            Object uploadValue = value;
-            System.out.println(String.format(
-                "\tProcess Attribute: key/value: '%s/%s'",
-                        key, value));
-            System.out.flush();
-            if (value == null || value.isEmpty())
-                continue;
-            // replace reference-ID with created JEVis-ID
-            if (value.startsWith(REFERENCE_MARKER)) {
-                String refIDStr = value.substring(REFERENCE_MARKER.length());
-                long refID = Long.valueOf(refIDStr);
-                //TODO: check if reference ID was set
-                uploadValue = "" + _mappedIDs.get(refID);
-            } else if (value.startsWith(FILE_MARKER)) {
-                try {
-                    String fileName = value.substring(FILE_MARKER.length());
-                    
-                    // Get relative path from json-file
-                    int indexSeperator = _jsonFile.lastIndexOf(File.separator);
-                    String filePath;
-                    if (indexSeperator >= 0) {
-                        filePath = _jsonFile.
-                            substring(0,_jsonFile.lastIndexOf(File.separator));
-                    } else {
-                        filePath = "";
-                    }
-                    
-                    if (!filePath.isEmpty()) {
-                        fileName = filePath + File.separator + fileName;
-                    }
-                    
-                    // Read file to upload
-                    File file = new File(fileName);
-                    JEVisFile jfile = new JEVisFileImp(file.getName(), file);
-                    
-                    uploadValue = jfile;
-                } catch (IOException ex) {
-                    Logger.getLogger(JSON2JEVisStructureCreator.class.getName()).log(Level.SEVERE, null, ex);
-                    break;
-                }
+        // Execute specified operation
+        boolean createCurrentObject = true;
+        if (op == OPERATIONS.IGNORE) {
+            System.out.println("\tIgnore Object: " + name);
+            createCurrentObject = false;
+        } else if (op == OPERATIONS.DELETE) {
+            System.out.println("\tDelete Object: " + name);
+            if (jevisObject != null) {
+                deleteObject(jevisObject);
                 
+                // Reprocess to delete all matching objects
+                createObjectFromJSON(jsonObject, parent);
+            } else {
+                System.out.println("\tObject not found, carry on: " + name);
             }
-            if (uploadValue == null) {
-                System.out.println("\t No value specified, not writing new Attribute");
-                continue;
+            createCurrentObject = false;
+        } else if (op == OPERATIONS.DELETE_RECURSIVE) {
+            System.out.println("\tDelete Class recursive: " + name);
+            if (jevisObject != null) {
+                deleteObjectRec(jevisObject);
+                
+                // Reprocess to delete all matching objects
+                createObjectFromJSON(jsonObject, parent);
+            } else {
+                System.out.println("\tObject not found, carry on: " + name);
             }
-            writeToJEVis(newObject.getID(), key, uploadValue);
+            createCurrentObject = false;
+        } else if (op == OPERATIONS.RENAME) {
+            // TODO: rename class
+            System.out.println("Error: operation 'RENAME' not implemented. Object: " + name);
+            return null;
+        }
+        
+        if (createCurrentObject) {
+            // New object or object was deleted, create new
+            if (jevisObject == null) {
+                System.out.println("\tCreate JEVis-Object: " + name);
+
+                jevisObject = createObject(parent.getID(), jevisClass, name);
+            }
+            // OP/IDs > 0 are treated as reference IDs and can be used by '$(REF)<ID>'
+            if (op > 0) {
+                //TODO: what to do if ref-id already set?
+                _mappedIDs.put(op, jevisObject.getID());
+            }
+            // Set/Update attributes
+            for (JsonAttribute att : jsonObject.getAttributes()) {
+                String key = att.getName();
+                String value = att.getLastvalue();
+                Object uploadValue = value;
+                System.out.println(String.format(
+                    "\tProcess Attribute: key/value: '%s/%s'",
+                            key, value));
+                System.out.flush();
+                if (value == null || value.isEmpty())
+                    continue;
+                // replace reference-ID with created JEVis-ID
+                if (value.startsWith(REFERENCE_MARKER)) {
+                    String refIDStr = value.substring(REFERENCE_MARKER.length());
+                    long refID = Long.valueOf(refIDStr);
+                    //TODO: check if reference ID was set
+                    uploadValue = "" + _mappedIDs.get(refID);
+                } else if (value.startsWith(FILE_MARKER)) {
+                    try {
+                        String fileName = value.substring(FILE_MARKER.length());
+
+                        // Get relative path from json-file
+                        int indexSeperator = _jsonFile.lastIndexOf(File.separator);
+                        String filePath;
+                        if (indexSeperator >= 0) {
+                            filePath = _jsonFile.
+                                substring(0,_jsonFile.lastIndexOf(File.separator));
+                        } else {
+                            filePath = "";
+                        }
+
+                        if (!filePath.isEmpty()) {
+                            fileName = filePath + File.separator + fileName;
+                        }
+
+                        // Read file to upload
+                        File file = new File(fileName);
+                        JEVisFile jfile = new JEVisFileImp(file.getName(), file);
+
+                        uploadValue = jfile;
+                    } catch (IOException ex) {
+                        Logger.getLogger(JSON2JEVisStructureCreator.class.getName()).log(Level.SEVERE, null, ex);
+                        break;
+                    }
+
+                }
+                if (uploadValue == null) {
+                    System.out.println("\t No value specified, not writing new Attribute");
+                    continue;
+                }
+                writeToJEVis(jevisObject.getID(), key, uploadValue);
+            }
         }
         
         // Create children from JSON
         for (JsonObject child : jsonObject.getChildren()) {
-            createObjectFromJSON(child, newObject);
+            createObjectFromJSON(child, jevisObject);
         }
-        return newObject;
+        return jevisObject;
     }
     
      /**
@@ -326,6 +357,30 @@ public class JSON2JEVisStructureCreator {
             Logger.getLogger(JSON2JEVisStructureCreator.class.getName()).log(Level.SEVERE, null, ex);
         }
         return newObject;
+    }
+    
+    public void deleteObject(JEVisObject jevisObject) throws JEVisException {
+        String objName = jevisObject.getName();
+        String className = jevisObject.getJEVisClass().getName();
+        System.out.println(String.format("Delete Object 'obj/class': '%s/%s'",
+                objName, className));
+        
+        jevisObject.delete();
+    }    
+    public void deleteObjectRec(JEVisObject jevisObject) throws JEVisException {
+        String objName = jevisObject.getName();
+        String className = jevisObject.getJEVisClass().getName();
+        System.out.println(String.format("Delete Object, enter recursion 'obj/class': '%s/%s'",
+                objName, className));
+        
+        // Delete children first
+        while (!jevisObject.getChildren().isEmpty()) {
+        //for (JEVisObject child : jevisObject.getChildren()) {
+            JEVisObject child = jevisObject.getChildren().get(0);
+            deleteObjectRec(child);
+        }
+        
+        deleteObject(jevisObject);
     }
     
     /**
