@@ -38,7 +38,6 @@ import org.jevis.api.JEVisObject;
 import org.jevis.api.JEVisSample;
 import org.jevis.api.sql.JEVisDataSourceSQL;
 import org.jevis.commons.JEVisFileImp;
-import org.jevis.commons.driver.DataCollectorTypes;
 import org.jevis.commons.json.JsonAttribute;
 import org.jevis.commons.json.JsonObject;
 
@@ -68,11 +67,19 @@ public class JSON2JEVisStructureCreator {
      * @param args not used
      */
     public static void main(String[] args){
+        
         JSON2JEVisStructureCreator wsc = new JSON2JEVisStructureCreator();
         wsc.connectToJEVis("localhost", "3306", "jevis", "jevis", "jevistest", "Sys Admin", "jevis");
         try {
-            //wsc.processJSONFile("DesigioStructure.json");
-            wsc.processJSONFile("../JEDrivers/MySQL-Driver/MySQLDriverObjects.json");
+            // Process all given json-files
+            if (args.length > 0) {
+                for (String jsonFile : args) {
+                    wsc.processJSONFile(jsonFile);
+                }
+            } else { // use defaults
+                wsc.processJSONFile("DesigioStructure.json");
+                //wsc.processJSONFile("../JEDrivers/MySQL-Driver/MySQLDriverObjects.json");
+            }
         } catch (JEVisException ex) {
             Logger.getLogger(JSON2JEVisStructureCreator.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
