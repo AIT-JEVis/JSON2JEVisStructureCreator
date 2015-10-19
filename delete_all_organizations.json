@@ -1,0 +1,12 @@
+{
+    "id": "-1",
+    "name": "Organization Directory",
+    "jevisclass": "Organization Directory",
+    "attributes": [],
+    "children": [
+        {
+            "id": "-3",
+            "jevisclass": "Organization"
+        }
+    ]
+}
