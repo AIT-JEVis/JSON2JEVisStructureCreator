@@ -31,6 +31,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jevis.api.JEVisAttribute;
 import org.jevis.api.JEVisClass;
+import org.jevis.api.JEVisConstants.PrimitiveType;
 import org.jevis.api.JEVisDataSource;
 import org.jevis.api.JEVisException;
 import org.jevis.api.JEVisFile;
@@ -80,9 +81,9 @@ public class JSON2JEVisStructureCreator {
                     wsc.processJSONFile(jsonFile);
                 }
             } else { // use defaults
-                wsc.processJSONFile("DesigioStructure.json");
-                //wsc.processJSONFile("delete_all_organizations.json");
-                //wsc.processJSONFile("delete_all_languages.json");
+                //wsc.processJSONFile("DesigioStructure.json");
+                wsc.processJSONFile("delete_all_organizations.json");
+                wsc.processJSONFile("delete_all_languages.json");
                 //wsc.processJSONFile("../JEDrivers/MySQL-Driver/MySQLDriverObjects.json");
             }
         } catch (JEVisException ex) {
@@ -360,19 +361,28 @@ public class JSON2JEVisStructureCreator {
     }
     
     public void deleteObject(JEVisObject jevisObject) throws JEVisException {
-        String objName = jevisObject.getName();
-        String className = jevisObject.getJEVisClass().getName();
-        System.out.println(String.format("Delete Object 'obj/class': '%s/%s'",
+        try {
+            String objName = jevisObject.getName();
+            String className = jevisObject.getJEVisClass().getName();
+            System.out.println(String.format("Delete Object 'obj/class': '%s/%s'",
                 objName, className));
+            
+            // throws NullPointerException if it is an object without class
+            for (JEVisAttribute att : jevisObject.getAttributes()) {
+                att.deleteAllSample();
+            }
+        } catch (NullPointerException e) {}
+        
         
         jevisObject.delete();
     }    
     public void deleteObjectRec(JEVisObject jevisObject) throws JEVisException {
-        String objName = jevisObject.getName();
-        String className = jevisObject.getJEVisClass().getName();
-        System.out.println(String.format("Delete Object, enter recursion 'obj/class': '%s/%s'",
+        try {
+            String objName = jevisObject.getName();
+            String className = jevisObject.getJEVisClass().getName();
+            System.out.println(String.format("Delete Object, enter recursion 'obj/class': '%s/%s'",
                 objName, className));
-        
+        } catch (NullPointerException e) {}
         // Delete children first
         while (!jevisObject.getChildren().isEmpty()) {
         //for (JEVisObject child : jevisObject.getChildren()) {
@@ -447,6 +457,18 @@ public class JSON2JEVisStructureCreator {
                         JEVisAttribute attribute = myObject.getAttribute(attributeName);
                         Logger.getLogger(JSON2JEVisStructureCreator.class.getName()).log(Level.INFO, "JEVisAttribute: " + attribute);
 
+                        if (attribute.getType().getPrimitiveType() == PrimitiveType.BOOLEAN) {
+                            if (value instanceof String) {
+                                String str = (String)value;
+                                Boolean bool;
+                                if (str.equals("1"))
+                                    bool = true;
+                                else
+                                    bool = Boolean.valueOf((String)value);
+                                
+                                value = bool;
+                            }
+                        }
                         //Now we let the Attribute creates an JEVisSample,an JEVisSample allways need an Timestamp and an value.
                         JEVisSample newSample = attribute.buildSample(null, value);
                         //Until now we created the sample only localy and we have to commit it to the JEVis Server.
