@@ -1,0 +1,17 @@
+{
+    "id": "-1",
+    "name": "JEDataCollector #1",
+    "jevisclass": "JEDataCollector",
+    "children": [
+        {
+            "id": "-6",
+            "name": "Data Source Driver Directory",
+            "jevisclass": "Data Source Driver Directory"
+        },
+        {
+            "id": "-6",
+            "name": "Parser Driver Directory",
+            "jevisclass": "Parser Driver Directory"
+        }
+    ]
+}

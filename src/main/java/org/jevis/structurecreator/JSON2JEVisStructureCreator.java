@@ -37,11 +37,11 @@ import org.jevis.api.JEVisException;
 import org.jevis.api.JEVisFile;
 import org.jevis.api.JEVisObject;
 import org.jevis.api.JEVisSample;
-import org.jevis.api.JEVisType;
 import org.jevis.api.sql.JEVisDataSourceSQL;
 import org.jevis.commons.JEVisFileImp;
 import org.jevis.commons.json.JsonAttribute;
 import org.jevis.commons.json.JsonObject;
+import org.joda.time.DateTime;
 
 
 public class JSON2JEVisStructureCreator {
@@ -53,6 +53,8 @@ public class JSON2JEVisStructureCreator {
         final long DELETE = -2;
         final long DELETE_RECURSIVE = -3;
         final long RENAME = -4;
+        final long DELETE_OLD_SAMPLES = -5;
+        final long DELETE_OLD_SAMPLES_RECURSIVE = -6;
     }
     private static final String REFERENCE_MARKER = "$(REF)";
     private static final String FILE_MARKER = "$(FILE)";
@@ -83,8 +85,9 @@ public class JSON2JEVisStructureCreator {
             } else { // use defaults
                 //wsc.processJSONFile("DesigioStructure.json");
                 wsc.processJSONFile("delete_all_organizations.json");
-                wsc.processJSONFile("delete_all_languages.json");
+                //wsc.processJSONFile("delete_all_languages.json");
                 //wsc.processJSONFile("../JEDrivers/MySQL-Driver/MySQLDriverObjects.json");
+                wsc.processJSONFile("delete_old_driver_jars.json");
             }
         } catch (JEVisException ex) {
             Logger.getLogger(JSON2JEVisStructureCreator.class.getName()).log(Level.SEVERE, null, ex);
@@ -235,6 +238,22 @@ public class JSON2JEVisStructureCreator {
             // TODO: rename class
             System.out.println("Error: operation 'RENAME' not implemented. Object: " + name);
             return null;
+        } else if (op == OPERATIONS.DELETE_OLD_SAMPLES) {
+            System.out.println("\tDelete old samples of Object: " + name);
+            if (jevisObject != null) {
+                deleteOldSamples(jevisObject);
+            } else {
+                System.out.println("\tObject not found, carry on: " + name);
+            }
+            createCurrentObject = false;
+        } else if (op == OPERATIONS.DELETE_OLD_SAMPLES_RECURSIVE) {
+            System.out.println("\tDelete old samples of Object and all its children: " + name);
+            if (jevisObject != null) {
+                deleteOldSamplesRec(jevisObject);
+            } else {
+                System.out.println("\tObject not found, carry on: " + name);
+            }
+            createCurrentObject = false;
         }
         
         if (createCurrentObject) {
@@ -391,6 +410,26 @@ public class JSON2JEVisStructureCreator {
         }
         
         deleteObject(jevisObject);
+    }
+    
+    private void deleteOldSamples(JEVisObject jevisObject) throws JEVisException {
+        try {
+            String objName = jevisObject.getName();
+            String className = jevisObject.getJEVisClass().getName();
+            System.out.println(String.format("Delete old Samples from Object 'obj/class': '%s/%s'",
+                objName, className));
+        } catch (NullPointerException e) {}
+        for (JEVisAttribute att : jevisObject.getAttributes()) {
+            JEVisSample latestSample = att.getLatestSample();
+            latestSample.getTimestamp();
+            att.deleteSamplesBetween(DateTime.parse("0"), latestSample.getTimestamp().minus(1));
+        }
+    }
+    private void deleteOldSamplesRec(JEVisObject jevisObject) throws JEVisException {
+        deleteOldSamples(jevisObject);
+        for (JEVisObject child : jevisObject.getChildren()) {
+            deleteOldSamplesRec(child);
+        }
     }
     
     /**
