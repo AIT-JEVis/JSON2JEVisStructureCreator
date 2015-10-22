@@ -65,7 +65,7 @@
                                                 },
                                                 {
                                                     "name": "Port",
-                                                    "lastvalue": "3306"
+                                                    "lastvalue": "1433"
                                                 },
                                                 {
                                                     "name": "Schema",
@@ -112,7 +112,7 @@
                                                                 },
                                                                 {
                                                                     "name": "Timestamp Format",
-                                                                    "lastvalue": "yyyy-MM-dd HH:mm:ss"
+                                                                    "lastvalue": "yyyy-MM-dd HH:mm:ss.s"
                                                                 }
                                                             ],
                                                             "children": [
