@@ -1,0 +1,11 @@
+{
+    "id": "-1",
+    "name": "Administration",
+    "jevisclass": "Administration Directory",
+    "children": [
+        {
+            "id": "-2",
+            "jevisclass": "Language Settings"
+        }
+    ]
+}
