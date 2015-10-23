@@ -72,12 +72,16 @@
                                                     "lastvalue": "PDM_DATA"
                                                 },
                                                 {
+                                                    "name": "Domain",
+                                                    "lastvalue": "IE10WIN7"
+                                                },
+                                                {
                                                     "name": "User",
-                                                    "lastvalue": "jevis"
+                                                    "lastvalue": ""
                                                 },
                                                 {
                                                     "name": "Password",
-                                                    "lastvalue": "jevistest"
+                                                    "lastvalue": ""
                                                 },
                                                 {
                                                     "name": "Enabled",
