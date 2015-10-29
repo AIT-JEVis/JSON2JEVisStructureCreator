@@ -40,12 +40,17 @@
                                     "children": [
                                         {
                                             "id": "1",
-                                            "name": "Waermemenge Verbraucher",
+                                            "name": "WP-42 Wärmemenge Verbraucher",
                                             "jevisclass": "Data"
                                         },
                                         {
                                             "id": "2",
-                                            "name": "Stromverbrauch Pumpen WP1+2",
+                                            "name": "WP-34 Stromverbrauch Pumpen für WMP1+2",
+                                            "jevisclass": "Data"
+                                        },
+                                        {
+                                            "id": "3",
+                                            "name": "WS-10 Aussentemperatur",
                                             "jevisclass": "Data"
                                         }
                                     ]
@@ -126,7 +131,7 @@
                                                                     "attributes": [],
                                                                     "children": [
                                                                         {
-                                                                            "name": "Waermemenge Verbraucher",
+                                                                            "name": "WP-42 Wärmemenge Verbraucher",
                                                                             "jevisclass": "SQL Data Point",
                                                                             "attributes": [
                                                                                 {
@@ -141,7 +146,7 @@
                                                                             "children": []
                                                                         },
                                                                         {
-                                                                            "name": "Stromberbrauch",
+                                                                            "name": "WP-34 Stromverbrauch Pumpen für WMP1+2",
                                                                             "jevisclass": "SQL Data Point",
                                                                             "attributes": [
                                                                                 {
@@ -151,6 +156,21 @@
                                                                                 {
                                                                                     "name": "Target",
                                                                                     "lastvalue": "$(REF)2"
+                                                                                }
+                                                                            ],
+                                                                            "children": []
+                                                                        },
+                                                                        {
+                                                                            "name": "WS-10 Aussentemperatur",
+                                                                            "jevisclass": "SQL Data Point",
+                                                                            "attributes": [
+                                                                                {
+                                                                                    "name": "ID",
+                                                                                    "lastvalue": "2229"
+                                                                                },
+                                                                                {
+                                                                                    "name": "Target",
+                                                                                    "lastvalue": "$(REF)3"
                                                                                 }
                                                                             ],
                                                                             "children": []
