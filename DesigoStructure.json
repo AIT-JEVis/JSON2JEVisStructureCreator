@@ -6,11 +6,11 @@
     "children": [
         {
             "id": "-3",
-            "name": "Desigio",
+            "name": "Desigo",
             "jevisclass": "Organization"
         },
         {
-            "name": "Desigio",
+            "name": "Desigo",
             "jevisclass": "Organization",
             "attributes": [
                 {
@@ -61,7 +61,7 @@
                                     "attributes": [],
                                     "children": [
                                         {
-                                            "name": "Desigio",
+                                            "name": "Desigo",
                                             "jevisclass": "MSSQL Server",
                                             "attributes": [
                                                 {
